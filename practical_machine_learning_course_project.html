@@ -1,0 +1,109 @@
+<html>
+
+<head>
+<title>practical Machine learning Courese project</title>
+</head>
+
+<body>
+
+
+<!--begin.rcode
+ #This machine learning project is based on the data provided by the following 
+#source:   http://groupware.les.inf.puc-rio.br/har
+
+
+
+# reading the two files
+# this file contains over 19000 training samples regarding movment patterns featuring 6 individuals
+# the movement fall into 5 categories "A", "B", "C", "D" and "E"
+training = read.csv("pml-training.csv" , header = TRUE)
+
+# we are provided with 20 movement patterns, accopanied by the individuals who performed them, but the "categiry" 
+# of the movement is missing. Our tast is to predict categories A-E, based upon the above training data.
+testing = read.csv("pml-testing.csv" , header = TRUE)
+
+# first we perform data cleansing, we remove unnecessary features, out of the more the 160 provided. 
+# identifying the colums containing "NA" values. 
+na_list=NULL
+for (i in 1:160) {
+  if (sum(is.na(training[i])) > 1) {
+  na_list= c(na_list,i)
+  }
+}
+# removing the colums containing "NA" values. 
+training <- training[-na_list]
+testing <- testing[-na_list]
+
+# identifying the colums containing "NULL" values. 
+emp_list = NULL
+for (i in 1:ncol(training)) {
+  if (sum(training[i]=='') > 1) {
+    emp_list= c(emp_list,i)
+    #print(sum(training[i]==''))
+  }
+}
+# removing the colums containing "NULL" values. 
+training <- training[-emp_list]
+testing <- testing[-emp_list]
+
+#removing the first 6 non significant columns from test set.
+testing <- testing[-1:-6]
+
+# wellknown fact, that the movment patterns of a person is very specific to the person
+# so it is wise thing to split our data according to the user names.
+adelmo <- subset(training,training$user=="adelmo") 
+adelmo <- adelmo[-1:-6]
+carlitos <- subset(training,training$user=="carlitos")
+carlitos <- carlitos[-1:-6]
+charles <- subset(training,training$user=="charles")
+charles <- charles[-1:-6]
+eurico <- subset(training,training$user=="eurico")
+eurico <- eurico[-1:-6]
+jeremy <- subset(training,training$user=="jeremy")
+jeremy <- jeremy[-1:-6]
+pedro <- subset(training,training$user=="pedro")
+pedro <- pedro[-1:-6]
+
+#I splitted every user's data int a train and a test set, into 60% / 40% partitions,
+# and run the "randomforest" method for all of the remaining 54 features, see this for "Adelmo" below:
+
+library(caret)
+inTrain <- createDataPartition(y=adelmo$classe,
+                               p=0.6, list=FALSE)
+train_adelmo <- adelmo[inTrain,]
+test_adelmo <- adelmo[-inTrain,]
+mod_ad <- train(classe~ .,method="rf",data=train_adelmo)
+# using mod_xx (here: ad) for predicting the result over the 40% of the remaining data 
+# at least 99% accuracy occured for all of the users!! 
+# by contrast, the accuracy of the prediction of different user's training ang testing sets 
+# found surprisingly low, between 15%-40%, proving our initial hypoteses about the specificity of 
+# personal moving patters. 
+
+
+ad_pred <- predict(mod_ad,testing[-54]) # adelmo's perdiction:
+#E  E  E  A* A  E  E  E  A  E  E  E  E  E  E  A  E  A  E  A
+
+je_pred <- predict(mod_je,testing[-54]) # jeremy's prediction:
+#A  A* B* A  A  E* D* B* A  E  B  C* A  A* E* A  A  A  A  A
+
+pe_pred <- predict(mod_pe,testing[-54]) # pedro's prediction:
+#B* D  D  E  D  D  D  D  D  D  C  D  D  D  D  D  A* D  B* D
+
+eu_pred <- predict(mod_eu,testing[-54]) # eurico's prediction:
+#A  A  A  A  A* A  E  E  A  E  A  A  B* A  E  E* A  E  A  B*
+
+ca_pred <- predict(mod_ca,testing[-54]) # carlitos's prediction:
+#E  E  E  A  A  E  E  E  A* E  B* E  A  E  E  A  E  B* E  A
+
+ch_pred <- predict(mod_ch,testing[-54]) # charles's prediction:
+#A  B  A  E  A  A  A  A  A  A* A  A  A  A  A  A  E  A  A  B
+
+# we used '*' to identify the predictions where the training user is the same as test user.
+# in every column there is only such prediction. These must be highly accurate predictions!!
+# by submitting them  20 out of 20 score received.
+
+end.rcode-->
+
+
+</body>
+</html>
